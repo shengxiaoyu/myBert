@@ -21,9 +21,9 @@ from __future__ import print_function
 import collections
 import csv
 import os
-from bert_base.bert import modeling
-from bert_base.bert import optimization
-from bert_base.bert import tokenization
+import modeling
+import optimization
+import tokenization
 import tensorflow as tf
 import random
 

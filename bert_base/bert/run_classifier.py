@@ -360,8 +360,8 @@ class ColaProcessor(DataProcessor):
 class EventProcesss(DataProcessor):
     def get_train_examples(self, data_dir):
         """Gets a collection of `InputExample`s for the train set."""
-        return self.__get_file__(data_dir,'train')
-
+        # return self.__get_file__(data_dir,'train')
+        return self.__get_file_by_event_seed__(data_dir)
 
     def get_dev_examples(self, data_dir):
         """Gets a collection of `InputExample`s for the dev set."""
@@ -369,10 +369,31 @@ class EventProcesss(DataProcessor):
     def get_test_examples(self, data_dir):
         """Gets a collection of `InputExample`s for prediction."""
         # return self.__get_file__(data_dir,'test')
-        return self.__get_masked_file_to_predict__(data_dir)
+        # return self.__get_masked_file_to_predict__(data_dir)
+        return self.__get_predice_file(data_dir)
     def get_labels(self):
         """Gets the list of labels for this data set."""
         return [True,False]
+
+    def __get_file_by_event_seed__(self,data_dir):
+        index = 0
+        examples = []
+        with open(os.path.join(data_dir,'dev_event.txt'),'r',encoding='utf8') as f:
+            eventSeeds = f.readlines()[0:config.event_seed_size]
+        with open(os.path.join(data_dir,'dev_noise.txt'),'r',encoding='utf8') as f2:
+            noise = f2.readlines()[0:config.event_seed_size]
+        for firstEventSeed in eventSeeds:
+            for secondEventSeed in eventSeeds:
+                guid = 'train-%d' % (index)
+                examples.append(InputExample(guid=guid, text_a=tokenization.convert_to_unicode(firstEventSeed),
+                                         text_b=tokenization.convert_to_unicode(secondEventSeed), label=True))
+                index += 1
+            for secondNoise in noise :
+                guid = 'train-%d' % (index)
+                examples.append(InputExample(guid=guid, text_a=tokenization.convert_to_unicode(firstEventSeed),
+                                             text_b=tokenization.convert_to_unicode(secondNoise), label=False))
+        random.shuffle(examples)
+        return examples
 
     def __get_file__(self,data_dir,mode):
         eventPath = os.path.join(data_dir, mode+'_event.txt')
@@ -422,7 +443,18 @@ class EventProcesss(DataProcessor):
         return examples
 
     def __get_predice_file(self,data_dir):
-        pass
+        examples = []
+        index = 0
+        data_dir = os.path.join(data_dir,'test')
+        for fileName in os.listdir(data_dir):
+            with open(os.path.join(data_dir, fileName), 'r', encoding='utf8') as f:
+                for line in f.readlines():
+                    splits = line.split('\t')
+                    guid = "test-%d" % (index)
+                    index += 1
+                    examples.append(InputExample(guid=guid, text_a=tokenization.convert_to_unicode(splits[0]),
+                                                 text_b=tokenization.convert_to_unicode(splits[1]),label=False))
+        return examples
 
     #针对mask文件的测试输入处理
     def __get_masked_file_to_predict__(self,data_dir):
@@ -435,7 +467,7 @@ class EventProcesss(DataProcessor):
                     guid = "test-%d" % (index)
                     index += 1
                     examples.append(InputExample(guid=guid,text_a=tokenization.convert_to_unicode(splits[1]),
-                                                 text_b=tokenization.convert_to_unicode(splits[2])))
+                                                 text_b=tokenization.convert_to_unicode(splits[2]),label=False))
         return examples
 
 def convert_single_example(ex_index, example, label_list, max_seq_length,
@@ -744,6 +776,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
     else:
       output_spec = tf.contrib.tpu.TPUEstimatorSpec(
           mode=mode, predictions=probabilities, scaffold_fn=scaffold_fn)
+
     return output_spec
 
   return model_fn
@@ -823,7 +856,6 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
 def main(_):
   tf.logging.set_verbosity(tf.logging.INFO)
-  print(FLAGS)
 
   processors = {
       "cola": ColaProcessor,
@@ -979,19 +1011,23 @@ def main(_):
 
     result = estimator.predict(input_fn=predict_input_fn)
 
-    # output_predict_file = os.path.join(FLAGS.output_dir, "test_results.tsv")
+    output_predict_file = os.path.join(FLAGS.output_dir, "test_results.tsv")
+    with open(output_predict_file, "w",encoding='utf8') as writer:
+      tf.logging.info("***** Predict results *****")
+      for prediction in result:
+        max = -1
+        id = -1
+        for index,class_probability in enumerate(prediction):
+            if(class_probability>max):
+                max = class_probability
+                id = index
+        writer.write(str(label_list[id]))
+        writer.write('\n')
+    # output_predict_file = os.path.join(FLAGS.output_dir, "test_results1.tsv")
     # with tf.gfile.GFile(output_predict_file, "w") as writer:
     #   tf.logging.info("***** Predict results *****")
-    #   for prediction in result:
-    #     output_line = "\t".join(
-    #         str(class_probability) for class_probability in prediction) + "\n"
-    #     writer.write(output_line)
-    predictions = tf.argmax(result, axis=-1, output_type=tf.int32)
-    output_predict_file = os.path.join(FLAGS.output_dir, "test_results1.tsv")
-    with tf.gfile.GFile(output_predict_file, "w") as writer:
-      tf.logging.info("***** Predict results *****")
-      output_line = '\n'.join(str(x) for x in predictions)
-      writer.write(output_line)
+    #   output_line = '\n'.join(str(x) for x in result)
+    #   writer.write(output_line)
 
 if __name__ == "__main__":
   # flags.mark_flag_as_required("data_dir")

@@ -92,7 +92,7 @@ def formSeedEventSentenceToTestData():
     with open(os.path.join(config.data_dir,'dev_event.txt'),'r',encoding='utf8') as f:
         count = 0
         while(count<config.event_seed_size):
-            eventSentences.append(f.readline())
+            eventSentences.append(f.readline().strip())
             count += 1
     for index,seedSentence in enumerate(eventSentences):
         formPredictData(seedSentence,str(index)+'.txt')

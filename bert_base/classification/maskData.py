@@ -75,11 +75,12 @@ def getTrigger():
         fw.write('\n')
 
 def formPredictData(sentence,fileName):
-    with open(os.path.join(config.data_dir,fileName),'w',encoding='utf8') as fw:
+    testDir = os.path.join(config.data_dir,'test')
+    with open(os.path.join(testDir,fileName),'w',encoding='utf8') as fw:
         count = 0
         with open(os.path.join(config.data_dir,'dev_event.txt'),'r',encoding='utf8') as f:
             while(count<config.event_seed_size):
-                fw.write(sentence+'\t'+f.readline()+"\n")
+                fw.write(sentence+'\t'+f.readline().strip()+"\n")
                 count += 1
 
 if __name__ == '__main__':

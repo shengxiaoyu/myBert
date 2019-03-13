@@ -1,0 +1,1 @@
+docker run -i -t -p 8001:8001 -v $PWD:/usr/src/brat --privileged=true -w /usr/src/brat python:2.7 python standalone.py 

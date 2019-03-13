@@ -5,7 +5,9 @@ __author__ = '13314409603@163.com'
 import os
 import random
 import sys
-Key = '结婚'
+from bert_base import config
+from bert_base.classification.maskData import formPredictData
+Key = config.event_type
 
 #抽取结婚句子和噪音句子
 def extractionEventSentence(basePath):
@@ -84,10 +86,19 @@ def splitTrainDevTest(savePath):
         testfw.writelines(noiseSentences[0:3056])
         devfw.writelines(noiseSentences[3056:13056])
         trainfw.writelines(noiseSentences[13056:-1])
+
+def formSeedEventSentenceToTestData():
+    eventSentences = []
+    with open(os.path.join(config.data_dir,'dev_event.txt'),'r',encoding='utf8') as f:
+        count = 0
+        while(count<config.event_seed_size):
+            eventSentences.append(f.readline())
+            count += 1
+    for index,seedSentence in enumerate(eventSentences):
+        formPredictData(seedSentence,str(index)+'.txt')
+
 if __name__ == '__main__':
-    basePath = 'C:\\Users\\13314\\Desktop\\BERT-EVENT'
-    extractionEventSentence(basePath)
-    splitTrainDevTest(basePath)
+    formSeedEventSentenceToTestData()
     # print(random.randint(0,4))
     sys.exit(0)
 

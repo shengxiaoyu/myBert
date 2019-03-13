@@ -19,23 +19,15 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
-import csv
 import os
 import modeling
 import optimization
 import tokenization
 import tensorflow as tf
 import random
+import csv
+from bert_base import config
 
-data_dir='C:\\Users\\13314\\Desktop\\BERT-EVENT'
-bert_config_file='E:\\pyWorkspace\\myBert\\chinese_L-12_H-768_A-12\\bert_config.json'
-task_name='event'
-vocab_file='E:\\pyWorkspace\\myBert\\chinese_L-12_H-768_A-12\\bert_config.json'
-output_dir = 'E:\\pyWorkspace\\myBert\\out_put'
-init_checkpoint='E:\\pyWorkspace\\myBert\\chinese_L-12_H-768_A-12\\bert_model.ckpt'
-do_train=False
-do_dev=False
-do_predict = True
 
 flags = tf.flags
 
@@ -43,28 +35,28 @@ FLAGS = flags.FLAGS
 
 ## Required parameters
 flags.DEFINE_string(
-    "data_dir", data_dir,
+    "data_dir", config.data_dir,
     "The input data dir. Should contain the .tsv files (or other data files) "
     "for the task.")
 
 flags.DEFINE_string(
-    "bert_config_file", bert_config_file,
+    "bert_config_file", config.bert_config_file,
     "The config json file corresponding to the pre-trained BERT model. "
     "This specifies the model architecture.")
 
-flags.DEFINE_string("task_name", task_name, "The name of the task to train.")
+flags.DEFINE_string("task_name", config.task_name, "The name of the task to train.")
 
-flags.DEFINE_string("vocab_file", vocab_file,
+flags.DEFINE_string("vocab_file", config.vocab_file,
                     "The vocabulary file that the BERT model was trained on.")
 
 flags.DEFINE_string(
-    "output_dir", output_dir,
+    "output_dir", config.output_dir,
     "The output directory where the model checkpoints will be written.")
 
 ## Other parameters
 
 flags.DEFINE_string(
-    "init_checkpoint", init_checkpoint,
+    "init_checkpoint", config.init_checkpoint,
     "Initial checkpoint (usually from a pre-trained BERT model).")
 
 flags.DEFINE_bool(
@@ -78,19 +70,19 @@ flags.DEFINE_integer(
     "Sequences longer than this will be truncated, and sequences shorter "
     "than this will be padded.")
 
-flags.DEFINE_bool("do_train", do_train, "Whether to run training.")
+flags.DEFINE_bool("do_train", config.do_train, "Whether to run training.")
 
-flags.DEFINE_bool("do_eval", do_dev, "Whether to run eval on the dev set.")
+flags.DEFINE_bool("do_eval", config.do_dev, "Whether to run eval on the dev set.")
 
 flags.DEFINE_bool(
-    "do_predict", do_predict,
+    "do_predict", config.do_predict,
     "Whether to run the model in inference mode on the test set.")
 
 flags.DEFINE_integer("train_batch_size", 32, "Total batch size for training.")
 
 flags.DEFINE_integer("eval_batch_size", 8, "Total batch size for eval.")
 
-flags.DEFINE_integer("predict_batch_size", 8, "Total batch size for predict.")
+flags.DEFINE_integer("predict_batch_size", config.event_seed_size, "Total batch size for predict.")
 
 flags.DEFINE_float("learning_rate", 5e-5, "The initial learning rate for Adam.")
 
@@ -376,8 +368,8 @@ class EventProcesss(DataProcessor):
         return self.__get_file__(data_dir,'dev')
     def get_test_examples(self, data_dir):
         """Gets a collection of `InputExample`s for prediction."""
-        return self.__get_file__(data_dir,'test')
-
+        # return self.__get_file__(data_dir,'test')
+        return self.__get_masked_file_to_predict__(data_dir)
     def get_labels(self):
         """Gets the list of labels for this data set."""
         return [True,False]
@@ -427,6 +419,23 @@ class EventProcesss(DataProcessor):
                 examples.append(input)
             flag = not flag
             index += 1
+        return examples
+
+    def __get_predice_file(self,data_dir):
+        pass
+
+    #针对mask文件的测试输入处理
+    def __get_masked_file_to_predict__(self,data_dir):
+        examples = []
+        index = 0
+        for fileName in os.listdir(os.path.join(data_dir,'mask')):
+            with open(os.path.join(data_dir,fileName),'r',encoding='utf8') as f:
+                for line in f.readlines():
+                    splits = line.split('\t')
+                    guid = "test-%d" % (index)
+                    index += 1
+                    examples.append(InputExample(guid=guid,text_a=tokenization.convert_to_unicode(splits[1]),
+                                                 text_b=tokenization.convert_to_unicode(splits[2])))
         return examples
 
 def convert_single_example(ex_index, example, label_list, max_seq_length,
@@ -970,14 +979,19 @@ def main(_):
 
     result = estimator.predict(input_fn=predict_input_fn)
 
-    output_predict_file = os.path.join(FLAGS.output_dir, "test_results.tsv")
+    # output_predict_file = os.path.join(FLAGS.output_dir, "test_results.tsv")
+    # with tf.gfile.GFile(output_predict_file, "w") as writer:
+    #   tf.logging.info("***** Predict results *****")
+    #   for prediction in result:
+    #     output_line = "\t".join(
+    #         str(class_probability) for class_probability in prediction) + "\n"
+    #     writer.write(output_line)
+    predictions = tf.argmax(result, axis=-1, output_type=tf.int32)
+    output_predict_file = os.path.join(FLAGS.output_dir, "test_results1.tsv")
     with tf.gfile.GFile(output_predict_file, "w") as writer:
       tf.logging.info("***** Predict results *****")
-      for prediction in result:
-        output_line = "\t".join(
-            str(class_probability) for class_probability in prediction) + "\n"
-        writer.write(output_line)
-
+      output_line = '\n'.join(str(x) for x in predictions)
+      writer.write(output_line)
 
 if __name__ == "__main__":
   # flags.mark_flag_as_required("data_dir")

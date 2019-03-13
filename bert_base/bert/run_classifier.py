@@ -26,7 +26,7 @@ import tokenization
 import tensorflow as tf
 import random
 import csv
-from bert_base import config
+import config
 
 
 flags = tf.flags

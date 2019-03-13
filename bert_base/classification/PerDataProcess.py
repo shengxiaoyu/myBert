@@ -5,7 +5,7 @@ __author__ = '13314409603@163.com'
 import os
 import random
 import sys
-from bert_base import config
+from bert_base.bert import config
 from bert_base.classification.maskData import formPredictData
 Key = config.event_type
 
@@ -89,9 +89,9 @@ def splitTrainDevTest(savePath):
 
 def formSeedEventSentenceToTestData():
     eventSentences = []
-    with open(os.path.join(config.data_dir,'dev_event.txt'),'r',encoding='utf8') as f:
+    with open(os.path.join(config.data_dir, 'dev_event.txt'), 'r', encoding='utf8') as f:
         count = 0
-        while(count<config.event_seed_size):
+        while(count < config.event_seed_size):
             eventSentences.append(f.readline().strip())
             count += 1
     for index,seedSentence in enumerate(eventSentences):

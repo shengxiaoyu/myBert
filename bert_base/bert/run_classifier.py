@@ -56,7 +56,7 @@ flags.DEFINE_string(
 ## Other parameters
 
 flags.DEFINE_string(
-    "init_checkpoint", config.init_checkpoint,
+    "init_checkpoint", None,
     "Initial checkpoint (usually from a pre-trained BERT model).")
 
 flags.DEFINE_bool(

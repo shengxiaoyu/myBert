@@ -15,13 +15,13 @@ data_dir=os.path.join(base_dir,'BERT-EVENT')
 bert_model_dir = os.path.join(base_dir,'chinese_L-12_H-768_A-12')
 task_name='event'
 vocab_file=os.path.join(bert_model_dir,'bert_config.json')
-output_dir = os.path.join(base_dir,'out_put')
+output_dir = os.path.join(base_dir,'out_put2')
 bert_config_file=os.path.join(bert_model_dir,'bert_config.json')
-# init_checkpoint=os.path.join(bert_model_dir,'bert_model.ckpt')
+init_checkpoint=os.path.join(bert_model_dir,'bert_model.ckpt')
 init_checkpoint=os.path.join(output_dir,'bert_model.ckpt')
 do_train=True
-do_dev=True
-do_predict = False
+do_dev=False
+do_predict = True
 event_seed_size = 100
 
 #mask标记

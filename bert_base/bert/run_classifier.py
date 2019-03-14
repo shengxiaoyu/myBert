@@ -361,7 +361,10 @@ class EventProcesss(DataProcessor):
     def get_train_examples(self, data_dir):
         """Gets a collection of `InputExample`s for the train set."""
         # return self.__get_file__(data_dir,'train')
-        return self.__get_file_by_event_seed__(data_dir)
+        # return self.__get_file_by_event_seed__(data_dir)
+        examples = self.__get_single_sentence__(data_dir,'train')
+        examples.extend(self.__get_single_sentence__(data_dir,'dev'))
+        return examples
 
     def get_dev_examples(self, data_dir):
         """Gets a collection of `InputExample`s for the dev set."""
@@ -370,11 +373,32 @@ class EventProcesss(DataProcessor):
         """Gets a collection of `InputExample`s for prediction."""
         # return self.__get_file__(data_dir,'test')
         # return self.__get_masked_file_to_predict__(data_dir)
-        return self.__get_predice_file(data_dir)
+        # return self.__get_predice_file(data_dir)
+        return self.__get_single_sentence__(data_dir,'test')
     def get_labels(self):
         """Gets the list of labels for this data set."""
         return [True,False]
 
+    #将单一句子作为输入
+    def __get_single_sentence__(self,data_dir,mode):
+        eventPath = os.path.join(data_dir, mode + '_event.txt')
+        noisePath = os.path.join(data_dir, mode + '_noise.txt')
+        examples = []
+        index = 0
+        with open(eventPath,'r',encoding='utf8') as f:
+            for sentence in f.readlines():
+                guid = "%s-%d" % (mode, index)
+                examples.append(InputExample(guid=guid,text_a=sentence,label=True))
+                index += 1
+        with open(noisePath, 'r', encoding='utf8') as f:
+            for sentence in f.readlines():
+                guid = "%s-%d" % (mode, index)
+                examples.append(InputExample(guid=guid,text_a=sentence,label=True))
+        if(mode=='train' or mode=='dev'):
+            random.shuffle(examples)
+        return examples
+
+    #将seed句子相互构造为输入句子对
     def __get_file_by_event_seed__(self,data_dir):
         index = 0
         examples = []
@@ -395,6 +419,7 @@ class EventProcesss(DataProcessor):
         random.shuffle(examples)
         return examples
 
+    #将seed句子和noise句子相加，构造句子对
     def __get_file__(self,data_dir,mode):
         eventPath = os.path.join(data_dir, mode+'_event.txt')
         noisePath = os.path.join(data_dir, mode+'_noise.txt')
@@ -442,6 +467,7 @@ class EventProcesss(DataProcessor):
             index += 1
         return examples
 
+    # 将seed句子相互构造为输入句子对
     def __get_predice_file(self,data_dir):
         examples = []
         index = 0

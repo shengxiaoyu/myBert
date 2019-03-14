@@ -56,7 +56,7 @@ flags.DEFINE_string(
 ## Other parameters
 
 flags.DEFINE_string(
-    "init_checkpoint", None,
+    "init_checkpoint", config.init_checkpoint,
     "Initial checkpoint (usually from a pre-trained BERT model).")
 
 flags.DEFINE_bool(
@@ -394,6 +394,7 @@ class EventProcesss(DataProcessor):
             for sentence in f.readlines():
                 guid = "%s-%d" % (mode, index)
                 examples.append(InputExample(guid=guid,text_a=sentence,label=True))
+                index += 1
         if(mode=='train' or mode=='dev'):
             random.shuffle(examples)
         return examples

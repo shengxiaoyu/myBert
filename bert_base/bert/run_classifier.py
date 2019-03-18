@@ -393,7 +393,7 @@ class EventProcesss(DataProcessor):
         with open(noisePath, 'r', encoding='utf8') as f:
             for sentence in f.readlines():
                 guid = "%s-%d" % (mode, index)
-                examples.append(InputExample(guid=guid,text_a=sentence,label=True))
+                examples.append(InputExample(guid=guid,text_a=sentence,label=False))
                 index += 1
         if(mode=='train' or mode=='dev'):
             random.shuffle(examples)

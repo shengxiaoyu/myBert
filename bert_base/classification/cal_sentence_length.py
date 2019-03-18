@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-
-import numpy as np
-import csv
+import math
 
 __doc__ = 'description'
 __author__ = '13314409603@163.com'
@@ -54,13 +52,31 @@ def an2Index(path):
         global COUNT
         os.renames(path,os.path.join(os.path.dirname(path),str(COUNT)+'.txt'))
         COUNT += 1
-
-
+import math
+#将一个文件夹下的文件列表分割转入子文件夹
+def divideFile(savePath,cap):
+    fileNames = os.listdir(savePath)
+    num = math.ceil(float(len(fileNames))/cap)
+    for i in range(num):
+        newDir = os.path.join(savePath,str(i+1))
+        os.mkdir(newDir)
+        beginIndex = i*cap
+        endIndex = (i+1)*cap
+        endIndex = endIndex if endIndex<len(fileNames) else -1
+        for fileName in fileNames[beginIndex:endIndex]:
+            os.rename(os.path.join(savePath,fileName),os.path.join(newDir,fileName))
+def rename(path):
+    for dir in os.listdir(path):
+        baseDir = os.path.join(path, dir)
+        for fileName in os.listdir(baseDir):
+            os.rename(os.path.join(baseDir, fileName), os.path.join(baseDir, fileName.replace('.xml', '.txt')))
 
 
 if __name__ == '__main__':
-    calSentenceLength('C:\\Users\\13314\\Desktop\\BERT-EVENT\\train_event.txt')
+    # calSentenceLength('C:\\Users\\13314\\Desktop\\BERT-EVENT\\train_event.txt')
     # with open('C:\\Users\\13314\\Desktop\\BERT-EVENT\\sentence-length.txt','w',encoding='utf8') as fw:
     #     fw.write('\n'.join(map(lambda x:str(x),LENGTHS)))
-    getMean()
+    # getMean()
+    # divideFile('C:\\Users\\13314\\Desktop\\Bi-LSTM+CRF\\segment_result\\cpws',100)
+    rename('C:\\Users\\13314\\Desktop\\Bi-LSTM+CRF\\segment_result\\cpws')
     sys.exit(0)

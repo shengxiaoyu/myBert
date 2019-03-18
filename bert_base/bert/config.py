@@ -5,9 +5,9 @@ __author__ = '13314409603@163.com'
 import os
 
 #windows
-base_dir = 'E:\\pyWorkspace\\myBert'
+#base_dir = 'E:\\pyWorkspace\\myBert'
 #linux
-# base_dir ='/home/myBert'
+base_dir ='/home/bert2/myBert'
 
 event_type='结婚'
 
@@ -18,7 +18,7 @@ vocab_file=os.path.join(bert_model_dir,'bert_config.json')
 output_dir = os.path.join(base_dir,'out_put2')
 bert_config_file=os.path.join(bert_model_dir,'bert_config.json')
 init_checkpoint=os.path.join(bert_model_dir,'bert_model.ckpt')
-init_checkpoint=os.path.join(output_dir,'bert_model.ckpt')
+#init_checkpoint=os.path.join(output_dir,'bert_model.ckpt')
 do_train=True
 do_dev=False
 do_predict = True
